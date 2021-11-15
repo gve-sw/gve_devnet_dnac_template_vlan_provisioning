@@ -1,17 +1,17 @@
 # DNAC Template VLAN Provisioning
+
 This prototype is built to assist in the process of migrating to new switches that are connected to DNA Center. This prototype provides a way to automate the provisioning of VLANs on the new switches depending on which devices are plugged into the new switch.
 
 ![IMAGES/dnac_vlan_template_design.png](IMAGES/dnac_vlan_template_design.png)
 
 ## Contacts
+
 * Danielle Stacy
 
 ## Solution Components
+
 * DNA Center
 * Python 3.9
-
-## Prerequisites
-- **Client MAC Addresses**: This code depends on a list of the MAC addresses already being provided. Before running this code, it is important to find and note the MAC addresses of the clients in this network. As the code is written, the MAC addresses are expected to be listed in the mac_addresses.json file.
 
 ## Installation/Configuration
 
@@ -26,21 +26,12 @@ env = {
 
 project_name = "enter name of project you want templates to go in here"
 ```
-3. Add the MAC addresses found in the Prerequisites section to the mac_addresses.json file.
-```
-{
-    "mac_addresses": [
-        "enter mac addresses of clients here",
-        "enter mac addresses of clients here"
-    ]
-}
-```
-4. Set up a Python virtual environment. Make sure Python 3 is installed in your environment, and if not, you may download Python [here](https://www.python.org/downloads/). Once Python 3 is installed in your environment, you can activate the virtual environment with the instructions found [here](https://docs.python.org/3/tutorial/venv.html).
-5. Install the requirements with `pip install -r requirements.txt`
+3. Set up a Python virtual environment. Make sure Python 3 is installed in your environment, and if not, you may download Python [here](https://www.python.org/downloads/). Once Python 3 is installed in your environment, you can activate the virtual environment with the instructions found [here](https://docs.python.org/3/tutorial/venv.html).
+4. Install the requirements with `pip install -r requirements.txt`
 
 ## Usage
 
-The functions that make the API calls to DNA Center are located in dnac.py. The find_vlans.py file should be run before the physical migration occurs to find the VLANs where the clients are associated on the old switches. This information is then written to the file mac_to_vlan.json. Once the old switches have been replaced with the new switches and all the clients have been migrated over, run the deploy_templates.py file to create templates that configure the VLANs on the switches and deploy those templates.
+The functions that make the API calls to DNA Center are located in dnac.py. The find_vlans.py file should be run before the physical migration occurs to find the VLANs where the clients are associated on the old switches. This information is then written to the file mac_to_vlan.json, and a list of the mac addresses of the clients are written to the file mac_addresses.json. Once the old switches have been replaced with the new switches and all the clients have been migrated over, run the deploy_templates.py file to create templates that configure the VLANs on the switches and deploy those templates.
 
 To run the find_vlans.py code, run the command `python3 find_vlans.py`.
 

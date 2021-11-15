@@ -16,26 +16,61 @@ or implied."""
 from env import env
 from dnac import *
 import json
+import pprint
+import time
 
-#mac_address.json contains all the mac addresses of the clients in the network
-mac_file = open("mac_addresses.json", "r")
-data = json.load(mac_file)
-mac_addresses = data["mac_addresses"]
-mac_file.close()
 
 #get DNAC token for authentication of future requests
 token = getAuthToken(env)
 env["token"] = token #add token to env that already contains the base_url, username, and password of the DNAC instance
 
+devices = getDnacDevices(env)
+switches = []
+for device in devices:
+    if device["family"] == "Switches and Hubs":
+        switches.append(device["id"])
+commands = ["show mac address-table"]
+show_mac_task = commandRunner(env, commands, switches)
+time.sleep(2)
+
+task_id = show_mac_task["response"]["taskId"]
+task = getTask(env, task_id)
+pprint.pprint(task)
+while "fileId" not in task["response"]["progress"]:
+    task = getTask(env, task_id)
+    pprint.pprint(task)
+
+task_progress = json.loads(task["response"]["progress"])
+file_id = task_progress["fileId"]
+file_json = getFileById(env, file_id)
+mac_table_lines = file_json[0]["commandResponses"]["SUCCESS"][commands[0]].splitlines()
+mac_table_lines = mac_table_lines[6:-3]
+
 #create a dictionary that will map every client to the VLAN it is currently associates with
 mac_to_vlan = {}
-for mac in mac_addresses:
-    client = getClientDetails(env, mac) #retrieve details of client, this information will contain the vlan the client is currently associated with
+for line in mac_table_lines:
+    table_entry = line.split()
+    vlan = table_entry[0]
+    mac = table_entry[1]
+    if vlan != "All":
+        mac_to_vlan[mac] = vlan
 
-    client_vlan = client["detail"]["vlanId"]
-    mac_to_vlan[mac] = client_vlan
+mac_addresses = { "mac_addresses": [] }
+keys = mac_to_vlan.keys()
+
+mac_to_vlan_formatted = {}
+for key in keys:
+    mac_chars = key.replace('.', '')
+    mac = mac_chars[:2] + ":" + mac_chars[2:4] + ":" + mac_chars[4:6] + ":" + mac_chars[6:8] + ":" + mac_chars[8:10] + ":" + mac_chars[10:12]
+    mac_to_vlan_formatted[mac] = mac_to_vlan[key]
+    mac_addresses["mac_addresses"].append(mac)
 
 #save dictionary created above into a json file
 mac_to_vlan_file = open("mac_to_vlan.json", "w")
-json.dump(mac_to_vlan, mac_to_vlan_file, indent=4)
+json.dump(mac_to_vlan_formatted, mac_to_vlan_file, indent=4)
 mac_to_vlan_file.close()
+
+#mac_address.json contains all the mac addresses of the clients in the network
+mac_file = open("mac_addresses.json", "w")
+json.dump(mac_addresses, mac_file, indent=4)
+mac_file.close()

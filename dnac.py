@@ -19,6 +19,7 @@ import requests
 import time
 import pprint
 import urllib3
+import json
 
 urllib3.disable_warnings()
 
@@ -244,5 +245,36 @@ def getTemplateByID(env, template_id):
     response = requests.get(url, headers=headers, verify=False)
 
     pprint.pprint(response.json())
+
+    return response.json()
+
+
+def commandRunner(env, commands, deviceIds):
+    url = "{}/dna/intent/api/v1/network-device-poller/cli/read-request".format(env["base_url"])
+    headers = {
+        "x-auth-token": env["token"],
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    payload = {
+        "commands": commands,
+        "deviceUuids": deviceIds,
+        "timeout": 0
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps(payload), verify=False)
+
+    return response.json()
+
+
+def getFileById(env, file_id):
+    url = "{}/dna/intent/api/v1/file/{}".format(env["base_url"], file_id)
+    headers = {
+        "x-auth-token": env["token"],
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    response = requests.get(url, headers=headers, verify=False)
 
     return response.json()
